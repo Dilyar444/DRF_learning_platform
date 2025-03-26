@@ -39,12 +39,6 @@ class LessonViewSet(viewsets.ModelViewSet):
     serializer_class = LessonSerializer
     permission_classes = [IsTeacherOrReadOnly]
 
-    def get_queryset(self):
-        # Студенты видят уроки только тех курсов, на которые они записаны
-        if self.request.user.is_student:
-            return Lesson.objects.filter(course__students=self.request.user)
-        return Lesson.objects.all()
-
 @extend_schema_view(
     list=extend_schema(summary="Получить список заданий", description="Возвращает список всех заданий. Студенты видят задания только тех курсов, на которые они записаны.", tags=["Задания"]),
     create=extend_schema(summary="Создать новое задание", description="Создает новое задание для урока. Доступно только преподавателям.", tags=["Задания"]),
@@ -58,11 +52,7 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     serializer_class = AssignmentSerializer
     permission_classes = [IsTeacherOrReadOnly]
 
-    def get_queryset(self):
-        # Студенты видят задания только тех курсов, на которые они записаны
-        if self.request.user.is_student:
-            return Assignment.objects.filter(lesson__course__students=self.request.user)
-        return Assignment.objects.all()
+
 
 @extend_schema_view(
     list=extend_schema(summary="Получить список выполненных заданий", description="Возвращает список выполненных заданий. Студенты видят только свои задания, преподаватели — все.", tags=["Выполненные задания"]),
@@ -78,10 +68,15 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     permission_classes = [IsOwnerOrTeacher]
 
     def get_queryset(self):
-        # Студенты видят только свои выполненные задания
         if self.request.user.is_student:
             return Submission.objects.filter(student=self.request.user)
         return Submission.objects.all()
+
+    def perform_create(self, serializer):
+        # Автоматически устанавливаем student как текущего пользователя
+        serializer.save(student=self.request.user)
+
+
 @extend_schema_view(
     list=extend_schema(summary="Получить список отзывов", description="Возвращает список всех отзывов на курсы. Студенты видят отзывы только на курсы, на которые они записаны.", tags=["Отзывы"]),
     create=extend_schema(summary="Оставить отзыв на курс", description="Позволяет студенту оставить отзыв на курс, если он на него записан.", tags=["Отзывы"]),

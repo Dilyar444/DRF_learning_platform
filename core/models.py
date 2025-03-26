@@ -29,7 +29,9 @@ class Submission(models.Model):
     student = models.ForeignKey(User, on_delete=models.CASCADE)
     file = models.FileField(upload_to='submissions/')
     submitted_at = models.DateTimeField(auto_now_add=True)
-    grade = models.IntegerField(null=True, blank=True)
+    
+    def __str__(self):
+        return f"Submission by {self.student} for {self.assignment}"
 
 class Review(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='reviews')

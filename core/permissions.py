@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from core.models import Course
 
 class IsTeacherOrReadOnly(permissions.BasePermission):
     """
